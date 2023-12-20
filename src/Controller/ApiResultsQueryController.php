@@ -121,13 +121,6 @@ class ApiResultsQueryController extends AbstractController implements ApiResults
             return Utils::errorMessage(Response::HTTP_NOT_FOUND, null, $format);    // 404
         }
 
-        if ($this->getUser()->getId() !== $result->getUser()->getId()) {
-            return Utils::errorMessage( // 403
-                Response::HTTP_FORBIDDEN,
-                '`Forbidden`: you don\'t have permission to access',
-                $format
-            );
-        }
 
         // Caching with ETag
         $etag = md5(json_encode($result, JSON_THROW_ON_ERROR));
@@ -201,14 +194,6 @@ class ApiResultsQueryController extends AbstractController implements ApiResults
             );
         }
 
-        // Puede crear un resultado sólo si tiene ROLE_ADMIN o ese resultado pertenece a este usuario
-        /*if (!$this->isGranted(self::ROLE_ADMIN)) {
-            return Utils::errorMessage( // 403
-                Response::HTTP_FORBIDDEN,
-                '`Forbidden`: you don\'t have permission to access',
-                $format
-            );
-        }*/
 
         $body = $request->getContent();
         $postData = json_decode((string) $body, true, 512, JSON_THROW_ON_ERROR);
