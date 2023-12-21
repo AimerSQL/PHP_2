@@ -53,19 +53,18 @@ class ResultTest extends TestCase
     public function testJsonSerialize()
     {
         $user = new User();
-        $user->setId(1);
-        $user->setUsername('testuser');
+        $user->setEmail('testuser@alumnos.upm.es');
 
         $result = new Result(42, $user, new \DateTime('2023-01-01 12:34:56'));
         $result->setId(1);
 
         $expectedJson = [
-            'Id' => 1,
             'user' => [
                 'Id' => 1,
-                'username' => 'testuser',
-            ],
-            'time' => '2023-01-01 12:34:56',
+                'result' => 42,
+                'time' => '2023-01-01 12:34:56',
+                'user' => $user
+            ]
         ];
 
         $this->assertEquals($expectedJson, $result->jsonSerialize());

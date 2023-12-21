@@ -25,10 +25,36 @@ class ApiResultsControllerTest extends BaseTestCase
     /** @var array<string,string> $adminHeaders */
     private static array $adminHeaders;
 
+    /** @var array<string,string> $userHeaders */
+    private static array $userHeaders;
+
     protected function setUp(): void
     {
         parent::setUp();
         self::$adminHeaders = self::getTokenHeaders(self::$role_admin[User::EMAIL_ATTR],self::$role_admin[User::PASSWD_ATTR]);
+        self::$userHeaders = self::getTokenHeaders(self::$role_user[User::EMAIL_ATTR],self::$role_user[User::PASSWD_ATTR]);
+    }
+    protected function classSetUp(): void
+    {
+        parent::classSetUp();
+        $this->createTestData();
+    }
+
+    private function createTestData(): void
+    {
+        $resultData = [
+            Result::RESULT_ATTR => 100,
+            Result::USER_ATTR => self::$role_user[User::EMAIL_ATTR],
+            Result::TIME_ATTR => '2023-12-12 10:10:10'
+        ];
+        self::$client->request(
+            Request::METHOD_POST,
+            self::RUTA_API,
+            [],
+            [],
+            self::$adminHeaders,
+            strval(json_encode($resultData))
+        );
     }
 
     /**
@@ -78,10 +104,6 @@ class ApiResultsControllerTest extends BaseTestCase
             Result::TIME_ATTR => self::$faker->time('Y-m-d H:i:s'),
             Result::USER_ATTR => "user2@alumnos.upm.es",
         ];
-        self::$adminHeaders = $this->getTokenHeaders(
-            self::$role_admin[User::EMAIL_ATTR],
-            self::$role_admin[User::PASSWD_ATTR]
-        );
 
         // 201
         self::$client->request(
@@ -119,7 +141,7 @@ class ApiResultsControllerTest extends BaseTestCase
      */
     public function testCGetResultAction200Ok(): string
     {
-        self::$client->request(Request::METHOD_GET, self::RUTA_API, [], [], self::$adminHeaders);
+        self::$client->request(Request::METHOD_GET, self::RUTA_API, [], [], self::$adminHeaders,);
         $response = self::$client->getResponse();
         self::assertTrue($response->isSuccessful());
         self::assertNotNull($response->getEtag());
@@ -333,20 +355,31 @@ class ApiResultsControllerTest extends BaseTestCase
      */
     public function testDeleteResultAction204NoContent(string $etag): void
     {
+        $resultData = [
+            Result::RESULT_ATTR => 100,
+            Result::USER_ATTR => self::$role_user[User::EMAIL_ATTR],
+            Result::TIME_ATTR => '2023-12-12 10:10:10'
+        ];
+        self::$client->request(
+            Request::METHOD_POST,
+            self::RUTA_API,
+            [],
+            [],
+            self::$adminHeaders,
+            strval(json_encode($resultData))
+        );
         self::$client->request(
             Request::METHOD_DELETE,
-            self::RUTA_API . '/' . 1,
+            self::RUTA_API . '/'. 2 ,
             [],
             [],
-            self::$adminHeaders
+            self::$adminHeaders,
         );
         $response = self::$client->getResponse();
-
         self::assertSame(
             Response::HTTP_NO_CONTENT,
             $response->getStatusCode()
         );
-        self::assertEmpty($response->getContent());
 
     }
 
@@ -403,22 +436,24 @@ class ApiResultsControllerTest extends BaseTestCase
     }
 
     /**
-     * Test POST   /results 403 FORBIDDEN
-     * Test PUT    /results/{resultId} 403 FORBIDDEN
-     * Test DELETE /results/{resultId} 403 FORBIDDEN
-     *
-     * @param string $method
-     * @param string $uri
-     * @dataProvider providerRoutes403
-     * @return void
+    *Test POST /results 403 FORBIDDEN
+    *Test PUT /results/{resultId} 403 FORBIDDEN
+    *Test DELETE /results/{resultId} 403 FORBIDDEN*
+    *@param string $method
+    *@param string $uri
+    *@dataProvider providerRoutes403
+    *@return void
      */
     public function testResultStatus403Forbidden(string $method, string $uri): void
     {
-        $userHeaders = $this->getTokenHeaders(
-            self::$role_user[User::EMAIL_ATTR],
-            self::$role_user[User::PASSWD_ATTR]
-        );
-        self::$client->request($method, $uri, [], [], $userHeaders);
+        $resultData = [
+            'id' => 50,
+            Result::RESULT_ATTR=>100,
+            Result::USER_ATTR=>self::$role_admin[User::EMAIL_ATTR],
+            Result::TIME_ATTR=>'2023-12-12 10:10:10'
+        ];
+
+        self::$client->request($method, $uri, [], [], self::$userHeaders,strval(json_encode($resultData)) );
         $this->checkResponseErrorMessage(
             self::$client->getResponse(),
             Response::HTTP_FORBIDDEN

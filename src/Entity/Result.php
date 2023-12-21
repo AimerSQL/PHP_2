@@ -112,9 +112,13 @@ class Result implements JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'Id'=>$this->getId(),
-            self::USER_ATTR=>$this->getUser(),
-            self::TIME_ATTR=>$this->getTime()
+            'user' => [
+                'Id' => $this->id,
+                'result' => $this->result,
+                'time' => $this->time->format('Y-m-d H:i:s'),
+                'user' => $this->user
+            ]
         ];
     }
+
 }
